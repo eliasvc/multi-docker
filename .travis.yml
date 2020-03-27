@@ -1,0 +1,20 @@
+sudo: required
+service:
+  - docker
+
+before_install:
+  - docker build -t eliasvc/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true eliasvc/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t eliasvc/multi-client ./client
+  - docker build -t eliasvc/multi-server ./server
+  - docker build -t eliasvc/multi-worker ./worker
+  - docker build -t eliasvc/nginx ./nginx
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push eliasvc/multi-client
+  - docker push eliasvc/multi-server
+  - docker push eliasvc/multi-worker
+  - docker push eliasvc/nginx
